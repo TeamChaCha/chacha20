@@ -29,6 +29,9 @@
 
 - ...
 
+- ## To run website, go to
+- https://teamchacha.github.io/my-chacha20-site/
+
 ## Why does it work?
 - ...
 
