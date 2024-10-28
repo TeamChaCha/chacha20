@@ -81,6 +81,7 @@ button:hover
 #output
 {
     background-color: #f4f4f4;
+    margin-top: 5px;
     padding: 10px;
     border-radius: 4px;
     text-align: left;
