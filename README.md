@@ -3,6 +3,10 @@
 - 11/19: 15 min. presentation due.
 - 12/03: report due.
 
+- 
+- ## To run website, go to
+- https://teamchacha.github.io/my-chacha20-site/
+
 ## Tasks
 - [ ] Frontend (React, Github Pages)
 - [ ] Backend (Python)
@@ -29,8 +33,6 @@
 
 - ...
 
-- ## To run website, go to
-- https://teamchacha.github.io/my-chacha20-site/
 
 ## Why does it work?
 - ...
