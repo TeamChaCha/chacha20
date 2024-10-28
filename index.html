@@ -9,25 +9,29 @@
 </head>
 <body>
     <div class="container">
+        <img id="logo" src="chacha.png">
         <h1>ChaCha20 Algorithm Demo</h1>
-        <p>Enter key, nonce, and message to see the ChaCha20 encryption in action!</p>
+        <!--<p>Enter key, nonce, and message to see the ChaCha20 encryption in action!</p>-->
 
-        <div class="input-group">
-            <label for="key">Key (Hex):</label>
-            <input type="text" id="key" placeholder="e.g., 01020304...">
-        </div>
-        <div class="input-group">
-            <label for="nonce">Nonce (Hex):</label>
-            <input type="text" id="nonce" placeholder="e.g., 00000001...">
-        </div>
-        <div class="input-group">
-            <label for="message">Message:</label>
-            <input type="text" id="message" placeholder="Enter your message">
-        </div>
-        <button onclick="runChaCha20()">Encrypt</button>
+            <div class="input_group">
+                <label for="key">Key (Hex):</label>
+                <input type="text" id="key" placeholder="e.g., 01020304...">
+            </div>
+            <div class="input_group">
+                <label for="nonce">Nonce (Hex):</label>
+                <input type="text" id="nonce" placeholder="e.g., 00000001...">
+            </div>
+            <div class="input_group">
+                <label for="message">Message:</label>
+                <input type="text" id="message" placeholder="Enter the message">
+            </div>
+            <button onclick="runChaCha20()">Encrypt</button>
+            <button onclick="runChaCha20()">Decrypt</button>
 
-        <h3>Output:</h3>
-        <pre id="output">ChaCha20 output will appear here...</pre>
+            <div class="output_group">
+                <h3>Output:</h3>
+                <pre id="output">ChaCha20 output will appear here...</pre>
+            </div>
     </div>
 
     <script>
