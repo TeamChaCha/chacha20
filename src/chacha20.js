@@ -1,4 +1,5 @@
-function runChaCha20() {
+function runChaCha20( ) 
+{
     const key = document.getElementById("key").value;
     const nonce = document.getElementById("nonce").value;
     const message = document.getElementById("message").value;
