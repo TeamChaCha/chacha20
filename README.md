@@ -1,17 +1,14 @@
 # Infosec II - ChaCha20
-- An implementation of ChaCha 20 for Information Security II, Fall 2024.
-- 11/19: 15 min. presentation due.
-- 12/03: report due.
+- An implementation of ChaCha20 for Information Security II, Fall 2024.
 
-- 
-- ## To run website, go to
+## How to Run
 - https://teamchacha.github.io/my-chacha20-site/
 
 ## Tasks
-- [ ] Frontend (React, Github Pages)
-- [ ] Backend (Python)
-- [ ] Presentation
-- [ ] Report
+- [ ] Frontend (HTML, CSS, JS, Github Pages)
+- [ ] Backend (Python / JS)
+- [ ] Presentation 11/19
+- [ ] Report 12/03
 
 ## Context (Why is it useful, where can it be applied?)
 - Used (alongside Poly1305) in Google's QUIC protocol for HTTP/3 <br/>
