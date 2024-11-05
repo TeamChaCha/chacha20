@@ -2,7 +2,7 @@
 - An implementation of ChaCha20 for Information Security II, Fall 2024.
 
 ## How to Run
-- https://teamchacha.github.io/my-chacha20-site/
+- https://teamchacha.github.io/my-chacha20-site/src/index.html
 
 ## Tasks
 - [ ] Frontend (HTML, CSS, JS, Github Pages)
