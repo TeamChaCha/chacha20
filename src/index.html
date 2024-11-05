@@ -23,8 +23,8 @@
             <label for="message">Message:</label>
             <input type="text" id="message" placeholder="Enter the message">
         </div>
-        <button onclick="runChaCha20()">Encrypt</button>
-        <button onclick="runChaCha20()">Decrypt</button>
+        <button onclick="encrypt()">Encrypt</button>
+        <button onclick="decrypt()">Decrypt</button>
 
         <div class="output_group">
             <h3>Output:</h3>
@@ -33,17 +33,6 @@
     </div>
 
     <script>
-        function runChaCha20() {
-            // This function will collect inputs and call your ChaCha20 algorithm
-            const key = document.getElementById("key").value;
-            const nonce = document.getElementById("nonce").value;
-            const message = document.getElementById("message").value;
-
-            // Here you would call your ChaCha20 function with the key, nonce, and message
-            // For now, just displaying the inputs in the output area as a placeholder
-            const outputElement = document.getElementById("output");
-            outputElement.innerText = `Key: ${key}\nNonce: ${nonce}\nMessage: ${message}\n(ChaCha20 result goes here)`;
-        }
     </script>
 </body>
 </html>

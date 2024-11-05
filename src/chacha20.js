@@ -1,35 +1,49 @@
-function runChaCha20( ) 
-{
-    const key = document.getElementById("key").value;
-    const nonce = document.getElementById("nonce").value;
-    const message = document.getElementById("message").value;
-    
-    const outputElement = document.getElementById("output");
-    outputElement.innerText = `Chacha20 Result: \nKey: ${key}\nNonce: ${nonce}\nMessage: ${message}`;
-}
-
-/*
-    State Matrix:
-    
-    [ "expa" ][ "nd 3" ][ "2-by" ][ "te K" ]
-    [   Key  ][   Key  ][   Key  ][   Key  ]
-    [   Key  ][   Key  ][   Key  ][   Key  ]
-    [ Counter][ Counter][  Nonce ][  Nonce ]
-
-    [   0    ][   1    ][   2    ][   3    ]
-    [   4    ][   5    ][   6    ][   7    ]
-    [   8    ][   9    ][   10   ][   11   ]
-    [   12   ][   13   ][   14   ][   15   ]
-*/
-
 function encrypt( )
 {
+    // Performs ChaCha20 encryption.
 
+    // TODO:
+    // 1. getElements()
+    const [key, nonce, message] = getElements( )
+    console.log(key)
+    // 2. hexToInt()
+    // 3. initState()
+    // 4. Peform encryption (? show changes during encryption)
+    // 5. postElements()
+    postElements(key, nonce, message)
 }
 
 function decrypt( )
 {
+    // Peforms ChaCha20 decryption.
 
+    // TODO:
+    // 1. Retrieve input
+    const [key, nonce, message] = getElements( )
+    // 2. hexToInt()
+    // 3. initState()
+    // 4. Peform decyrption (? show changes during decryption)
+    // 5. Post output
+    postElements(key, nonce, message)
+}
+
+function hexToInt( )
+{
+    // Convert hex strings to byte arrays.
+}
+
+function getElements( ) 
+{
+    // Retrieves algorithm input.
+    const ids = ["key", "nonce", "message"] 
+    return ids.map(id => document.getElementById(id).value)
+}
+
+function postElements(key, nonce, message)
+{
+    // Posts algorithm output.
+    const outputElement = document.getElementById("output");
+    outputElement.innerText = `Chacha20 Result: \nKey: ${key}\nNonce: ${nonce}\nMessage: ${message}`;
 }
 
 function initState( )
