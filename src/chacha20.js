@@ -5,7 +5,6 @@ function encrypt( )
     // TODO:
     // 1. getElements()
     const [key, nonce, message] = getElements( )
-    console.log(key)
     // 2. hexToInt()
     // 3. initState()
     // 4. Peform encryption (? show changes during encryption)
