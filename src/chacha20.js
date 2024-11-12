@@ -1,34 +1,70 @@
+// Example Key 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
+//             (64 chars of hex == 256 bits)
+// Example Nonce 0123456789ABCDEF
+//               (16 chars of hex == 64 bits)
+
+
 function encrypt( )
 {
     // Performs ChaCha20 encryption.
 
-    // TODO:
     // 1. getElements()
     const [key, nonce, message] = getElements( )
     // 2. hexToInt()
+    const bytesKey   = hexToInt(key);
+    const bytesNonce = hexToInt(nonce);
+    postIntermediate("Hex to Int Conversion", ["Key:", bytesKey, "Nonce:", bytesNonce])
     // 3. initState()
+    const state = initState(bytesKey, bytesNonce)
     // 4. Peform encryption (? show changes during encryption)
     // 5. postElements()
-    postElements(key, nonce, message)
+    postResults(bytesKey, bytesNonce, message)
 }
 
 function decrypt( )
 {
     // Peforms ChaCha20 decryption.
 
-    // TODO:
     // 1. Retrieve input
     const [key, nonce, message] = getElements( )
     // 2. hexToInt()
+    const bytesKey   = hexToInt(key);
+    const bytesNonce = hexToInt(nonce);
+    postIntermediate("Hex to Int Conversion", ["Key:", bytesKey, "Nonce:", bytesNonce])
     // 3. initState()
+    const state = initState(bytesKey, bytesNonce)
     // 4. Peform decyrption (? show changes during decryption)
     // 5. Post output
-    postElements(key, nonce, message)
+    postResults(bytesKey, bytesNonce, message)
 }
 
-function hexToInt( )
+function hexToInt( hex )
 {
-    // Convert hex strings to byte arrays.
+    // Convert hex strings to byte arrays, since each 
+    // element in state is a 32-bit word (4 bytes).
+
+    // 256-bit key = 32 bytes = 64 hex chars.
+    // 64-bit nonce = 8 bytes = 16 hex chars.
+    // 1 hex value = 4 bits; 2 hex values = 1 byte.
+
+    // e.g., given a 256-bit key (64 hex chars), this 
+    // creates a Uint8Array of size 32 (64 / 2).
+    const byteArray = new Uint8Array(hex.length / 2); 
+    // Loop through the hex string, converting each pair
+    // of characters to a byte.
+    let idx = 0
+    for (let i = 0; i < hex.length; i += 2)
+    {
+        // Extract a pair of hex chars (1 byte).
+        const hexChars = hex.substr(i, 2);
+        // Convert the hex charts to an int.
+        const hexByte = parseInt(hexChars, 16);
+        // Store in byteArray.
+        byteArray[idx] = hexByte;
+        idx++;
+    }
+
+    return byteArray;
 }
 
 function getElements( ) 
@@ -38,14 +74,44 @@ function getElements( )
     return ids.map(id => document.getElementById(id).value)
 }
 
-function postElements(key, nonce, message)
+function postIntermediate(section, input)
 {
-    // Posts algorithm output.
-    const outputElement = document.getElementById("output");
-    outputElement.innerText = `Chacha20 Result: \nKey: ${key}\nNonce: ${nonce}\nMessage: ${message}`;
+    // Posts intermediate algorithm output (e.g., round output).
+    // Get HTML class and header.
+    const outputGroup = document.querySelector(".output_group");
+    const intermediateHeader = document.querySelector(".output_group h4");
+    
+    // Create new pre element, for new block
+    // of intermediate output.
+    const newPre = document.createElement("pre");
+    newPre.className = "intermed";
+
+    let sectionContent = `${section}:`;
+    for (let i = 0; i < input.length; i++) 
+    {
+        sectionContent += `\n${input[i]}`;
+    }
+    newPre.innerText = sectionContent;
+
+    // Insert new <pre> element, in between two headers.
+    intermediateHeader.insertAdjacentElement("afterend", newPre);
 }
 
-function initState( )
+
+function postResults(key, nonce, message)
+{
+    // Posts final algorithm output.
+    const outputElement = document.getElementById("result");
+    outputElement.innerText =
+    [
+        `Chacha20 Result:` + 
+        `\nKey: ${key}` +
+        `\nNonce: ${nonce}` +
+        `\nMessage: ${message}`
+    ];
+}
+
+function initState( key, nonce )
 {
     // Initializes the state matrix, as shown below:
     //
@@ -58,6 +124,7 @@ function initState( )
     // [   4    ][   5    ][   6    ][   7    ]
     // [   8    ][   9    ][   10   ][   11   ]
     // [   12   ][   13   ][   14   ][   15   ]
+    return false
 }
 
 function chacha20Block( )
