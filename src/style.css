@@ -35,11 +35,10 @@ body
 h1
 {
     margin: 20px 15px;
-    color: #007acc;
+    color: #008643;
 }
 
-.input_group,
-.output_group
+.input_group
 {
     text-align: left;
     padding: 15px;
@@ -66,7 +65,7 @@ button
     padding: 10px 20px;
     font-size: 16px;
     color: #fff;
-    background-color: #007acc;
+    background-color: #008643;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -75,15 +74,34 @@ button
 
 button:hover
 {
-    background-color: #005a99;
+    background-color: #016A36;
 }
 
-#output
+.intermed
 {
-    background-color: #f4f4f4;
-    margin-top: 5px;
-    padding: 10px;
+    background-color: #dddddd;
+    padding: 15px;
     border-radius: 4px;
+    border: 1px solid #e9ecef;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 14px;
+    line-height: 1.5;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.output_group
+{
+    margin-top: 5px;
+    border-radius: 4px;
+    padding: 15px;
     text-align: left;
     white-space: pre-wrap;
+}
+
+#result
+{
+    background-color: #d9e2db;
 }

@@ -11,12 +11,14 @@ function encrypt( )
     // 1. getElements()
     const [key, nonce, message] = getElements( )
     // 2. hexToInt()
-    const byteKey = hexToInt(key);
-    const byteNonce = hexToInt(nonce);
+    const bytesKey   = hexToInt(key);
+    const bytesNonce = hexToInt(nonce);
+    postIntermediate("Hex to Int Conversion", ["Key:", bytesKey, "Nonce:", bytesNonce])
     // 3. initState()
+    const state = initState(bytesKey, bytesNonce)
     // 4. Peform encryption (? show changes during encryption)
     // 5. postElements()
-    postElements(byteKey, byteNonce, message)
+    postResults(bytesKey, bytesNonce, message)
 }
 
 function decrypt( )
@@ -26,12 +28,14 @@ function decrypt( )
     // 1. Retrieve input
     const [key, nonce, message] = getElements( )
     // 2. hexToInt()
-    const byteKey = hexToInt(key);
-    const byteNonce = hexToInt(nonce);
+    const bytesKey   = hexToInt(key);
+    const bytesNonce = hexToInt(nonce);
+    postIntermediate("Hex to Int Conversion", ["Key:", bytesKey, "Nonce:", bytesNonce])
     // 3. initState()
+    const state = initState(bytesKey, bytesNonce)
     // 4. Peform decyrption (? show changes during decryption)
     // 5. Post output
-    postElements(byteKey, byteNonce, message)
+    postResults(bytesKey, bytesNonce, message)
 }
 
 function hexToInt( hex )
@@ -70,14 +74,44 @@ function getElements( )
     return ids.map(id => document.getElementById(id).value)
 }
 
-function postElements(key, nonce, message)
+function postIntermediate(section, input)
 {
-    // Posts algorithm output.
-    const outputElement = document.getElementById("output");
-    outputElement.innerText = `Chacha20 Result: \nKey: ${key}\nNonce: ${nonce}\nMessage: ${message}`;
+    // Posts intermediate algorithm output (e.g., round output).
+    // Get HTML class and header.
+    const outputGroup = document.querySelector(".output_group");
+    const intermediateHeader = document.querySelector(".output_group h4");
+    
+    // Create new pre element, for new block
+    // of intermediate output.
+    const newPre = document.createElement("pre");
+    newPre.className = "intermed";
+
+    let sectionContent = `${section}:`;
+    for (let i = 0; i < input.length; i++) 
+    {
+        sectionContent += `\n${input[i]}`;
+    }
+    newPre.innerText = sectionContent;
+
+    // Insert new <pre> element, in between two headers.
+    intermediateHeader.insertAdjacentElement("afterend", newPre);
 }
 
-function initState( )
+
+function postResults(key, nonce, message)
+{
+    // Posts final algorithm output.
+    const outputElement = document.getElementById("result");
+    outputElement.innerText =
+    [
+        `Chacha20 Result:` + 
+        `\nKey: ${key}` +
+        `\nNonce: ${nonce}` +
+        `\nMessage: ${message}`
+    ];
+}
+
+function initState( key, nonce )
 {
     // Initializes the state matrix, as shown below:
     //
@@ -90,6 +124,7 @@ function initState( )
     // [   4    ][   5    ][   6    ][   7    ]
     // [   8    ][   9    ][   10   ][   11   ]
     // [   12   ][   13   ][   14   ][   15   ]
+    return false
 }
 
 function chacha20Block( )
