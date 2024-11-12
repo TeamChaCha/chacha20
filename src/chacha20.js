@@ -3,7 +3,6 @@
 // Example Nonce 0123456789ABCDEF
 //               (16 chars of hex == 64 bits)
 
-
 function encrypt( )
 {
     // Performs ChaCha20 encryption.
@@ -13,12 +12,12 @@ function encrypt( )
     // 2. hexToInt()
     const bytesKey   = hexToInt(key);
     const bytesNonce = hexToInt(nonce);
-    postIntermediate("Hex to Int Conversion", ["Key:", bytesKey, "Nonce:", bytesNonce])
+    postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
     // 3. initState()
     const state = initState(bytesKey, bytesNonce)
     // 4. Peform encryption (? show changes during encryption)
     // 5. postElements()
-    postResults(bytesKey, bytesNonce, message)
+    postResults(message)
 }
 
 function decrypt( )
@@ -30,12 +29,12 @@ function decrypt( )
     // 2. hexToInt()
     const bytesKey   = hexToInt(key);
     const bytesNonce = hexToInt(nonce);
-    postIntermediate("Hex to Int Conversion", ["Key:", bytesKey, "Nonce:", bytesNonce])
+    postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
     // 3. initState()
     const state = initState(bytesKey, bytesNonce)
     // 4. Peform decyrption (? show changes during decryption)
     // 5. Post output
-    postResults(bytesKey, bytesNonce, message)
+    postResults(message)
 }
 
 function hexToInt( hex )
@@ -84,7 +83,7 @@ function postIntermediate(section, input)
     // Create new pre element, for new block
     // of intermediate output.
     const newPre = document.createElement("pre");
-    newPre.className = "intermed";
+    newPre.className = "output";
 
     let sectionContent = `${section}:`;
     for (let i = 0; i < input.length; i++) 
@@ -98,17 +97,28 @@ function postIntermediate(section, input)
 }
 
 
-function postResults(key, nonce, message)
+function postResults(message)
 {
+    // Create new pre element, for new block
+    // of results output.
+    const newPre = document.createElement("pre");
+    newPre.className = "output";
+    newPre.id = "result";
+    const resultsHeader = document.querySelector(".output_group h4:nth-of-type(2)");
+
     // Posts final algorithm output.
-    const outputElement = document.getElementById("result");
-    outputElement.innerText =
-    [
-        `Chacha20 Result:` + 
-        `\nKey: ${key}` +
-        `\nNonce: ${nonce}` +
-        `\nMessage: ${message}`
-    ];
+    newPre.innerText = `Message: \n${message}`;
+    resultsHeader.insertAdjacentElement("afterend", newPre);
+}
+
+function clearOutput( )
+{
+    // Clear HTML output section; remove
+    // all <pre> elements.
+    document.querySelectorAll(".output_group pre").forEach
+    (
+        element => {element.remove( )}
+    );
 }
 
 function initState( key, nonce )
