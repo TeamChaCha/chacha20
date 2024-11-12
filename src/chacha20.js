@@ -78,7 +78,7 @@ function postIntermediate(section, input)
     // Posts intermediate algorithm output (e.g., round output).
     // Get HTML class and header.
     const outputGroup = document.querySelector(".output_group");
-    const intermediateHeader = document.querySelector(".output_group h4");
+    const intermediateHeader = document.querySelector(".output_group h3");
     
     // Create new pre element, for new block
     // of intermediate output.
@@ -104,7 +104,7 @@ function postResults(message)
     const newPre = document.createElement("pre");
     newPre.className = "output";
     newPre.id = "result";
-    const resultsHeader = document.querySelector(".output_group h4:nth-of-type(2)");
+    const resultsHeader = document.querySelector(".output_group h3:nth-of-type(2)");
 
     // Posts final algorithm output.
     newPre.innerText = `Message: \n${message}`;
