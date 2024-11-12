@@ -1,34 +1,66 @@
+// Example Key 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
+//             (64 chars of hex == 256 bits)
+// Example Nonce 0123456789ABCDEF
+//               (16 chars of hex == 64 bits)
+
+
 function encrypt( )
 {
     // Performs ChaCha20 encryption.
 
-    // TODO:
     // 1. getElements()
     const [key, nonce, message] = getElements( )
     // 2. hexToInt()
+    const byteKey = hexToInt(key);
+    const byteNonce = hexToInt(nonce);
     // 3. initState()
     // 4. Peform encryption (? show changes during encryption)
     // 5. postElements()
-    postElements(key, nonce, message)
+    postElements(byteKey, byteNonce, message)
 }
 
 function decrypt( )
 {
     // Peforms ChaCha20 decryption.
 
-    // TODO:
     // 1. Retrieve input
     const [key, nonce, message] = getElements( )
     // 2. hexToInt()
+    const byteKey = hexToInt(key);
+    const byteNonce = hexToInt(nonce);
     // 3. initState()
     // 4. Peform decyrption (? show changes during decryption)
     // 5. Post output
-    postElements(key, nonce, message)
+    postElements(byteKey, byteNonce, message)
 }
 
-function hexToInt( )
+function hexToInt( hex )
 {
-    // Convert hex strings to byte arrays.
+    // Convert hex strings to byte arrays, since each 
+    // element in state is a 32-bit word (4 bytes).
+
+    // 256-bit key = 32 bytes = 64 hex chars.
+    // 64-bit nonce = 8 bytes = 16 hex chars.
+    // 1 hex value = 4 bits; 2 hex values = 1 byte.
+
+    // e.g., given a 256-bit key (64 hex chars), this 
+    // creates a Uint8Array of size 32 (64 / 2).
+    const byteArray = new Uint8Array(hex.length / 2); 
+    // Loop through the hex string, converting each pair
+    // of characters to a byte.
+    let idx = 0
+    for (let i = 0; i < hex.length; i += 2)
+    {
+        // Extract a pair of hex chars (1 byte).
+        const hexChars = hex.substr(i, 2);
+        // Convert the hex charts to an int.
+        const hexByte = parseInt(hexChars, 16);
+        // Store in byteArray.
+        byteArray[idx] = hexByte;
+        idx++;
+    }
+
+    return byteArray;
 }
 
 function getElements( ) 
