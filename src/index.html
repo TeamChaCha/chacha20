@@ -10,13 +10,24 @@
 <body>
     <div class="container">
         <img id="logo" src="../assets/chacha.png">
-        <h1>ChaCha20 Algorithm</h1>
+        <h1 id="title">ChaCha20 Algorithm</h1>
+        <div class="about">
+            <h2>About</h2>
+            <p>
+                This website demonstrates the ChaCha20 cryptographic algorithm.
+                Enter some input below to begin. Intermediate results (e.g., algorithm state)
+                will be displayed during program run.
+            </p>
+        </div>
+        <h2>Input</h2>
         <div class="input_group">
-            <label for="key">Key (in Hex):</label>
+            <label for="key">Key (in hex):</label>
+            <pre class="subtitle">e.g., 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF</pre>
             <textarea id="key" placeholder="..." rows="2"></textarea>
         </div>
         <div class="input_group">
-            <label for="nonce">Nonce (in Hex):</label>
+            <label for="nonce">Nonce (in hex):</label>
+            <pre class="subtitle">e.g., 0123456789ABCDEF</pre>
             <textarea id="nonce" placeholder="..." rows="2"></textarea>
         </div>
         <div class="input_group">
@@ -27,13 +38,10 @@
         <button onclick="decrypt()">Decrypt</button>
         <button onclick="clearOutput()">Clear Output</button>
         <div class="output_group">
-            <h3>Output:</h3>
-            <h4>Intermediate Results</h4>
-            <h4>Final Results</h4>
+            <h2>Output</h2>
+            <h3>Intermediate Results</h3>
+            <h3>Final Results</h3>
         </div>
     </div>
-
-    <script>
-    </script>
 </body>
 </html>
