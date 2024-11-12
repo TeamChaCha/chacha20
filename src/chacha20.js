@@ -134,7 +134,41 @@ function initState( key, nonce )
     // [   4    ][   5    ][   6    ][   7    ]
     // [   8    ][   9    ][   10   ][   11   ]
     // [   12   ][   13   ][   14   ][   15   ]
-    return false
+
+    const matrixVisual =
+    `
+    [ "expa" ][ "nd 3" ][ "2-by" ][ "te K" ]
+    [   Key  ][   Key  ][   Key  ][   Key  ]
+    [   Key  ][   Key  ][   Key  ][   Key  ]
+    [ Counter][ Counter][  Nonce ][  Nonce ]
+    `
+
+    postIntermediate("Initializing the State Matrix", [matrixVisual])
+
+    // 4x4 matrix of 32-bit words.
+    const state = new Uint32Array(16) 
+
+    // Add the nothing-up-my-sleeve constants,
+    // "expand 32-byte K".
+    state[0] = 0x65787061; // "expa"
+    state[1] = 0x6E642033; // "nd 3"
+    state[2] = 0x322D6279; // "2-by"
+    state[3] = 0x7465206B; // "te k"
+
+    // Add the key.
+    for (let i = 0; i < 8; i++)
+    {
+        state[4 + i] = (key[i * 4]) | (key[i * 4 + 1] << 8) | (key[i * 4 + 2] << 16) | (key[i * 4 + 3] << 24);
+    }
+
+    // Add the counter.
+    state[12] = 1;
+
+    // Add the 64-bit nonce into state[14] and state[15]
+    state[14] = (nonce[0]) | (nonce[1] << 8) | (nonce[2] << 16) | (nonce[3] << 24);
+    state[15] = (nonce[4]) | (nonce[5] << 8) | (nonce[6] << 16) | (nonce[7] << 24);
+
+    return state
 }
 
 function chacha20Block( )
@@ -185,3 +219,27 @@ function rotateLeft(val, shift)
     let rotatedValue = leftShifted | rightShifted;
     return rotatedValue >>> 0;
 }
+
+/*
+function initializeState(key, nonce) {
+    const state = new Uint32Array(16);
+    
+    const constants = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]; // "expa", "nd 3", "2-by", "te K"
+    for (let i = 0; i < 4; i++) {
+        state[i] = constants[i];
+    }
+
+    for (let i = 0; i < 8; i++) {
+        state[i + 4] = (key[i * 4] << 24) | (key[i * 4 + 1] << 16) | (key[i * 4 + 2] << 8) | (key[i * 4 + 3]);
+    }
+
+    state[12] = 0; // Counter
+    state[13] = 0; // Counter
+
+    for (let i = 0; i < 2; i++) {
+        state[i + 14] = (nonce[i * 4] << 24) | (nonce[i * 4 + 1] << 16) | (nonce[i * 4 + 2] << 8) | (nonce[i * 4 + 3]);
+    }
+
+    return state;
+}
+*/
