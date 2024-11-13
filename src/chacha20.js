@@ -97,11 +97,12 @@ function decrypt( )
 
         for (let i = 0; i < bytesMessage.length; i += 64) 
         {
-            // Preserve original state matrix to added back at end,
+            // Preserve original state matrix to add back at end,
             // since workingState gets modified in chacha20Block( ).
             const workingState = new Uint32Array(state);
             workingState[12] = blockCounter & 0xffffffff; // Get lower 32-bits.
-            workingState[13] = (blockCounter >> 32) & 0xffffffff; // Get upper 32-bits.
+            // workingState[13] = (blockCounter >> 32) & 0xffffffff;
+            workingState[13] = blockCounter >> 0; // Get upper 32-bits.
             
             chacha20Block(workingState, blockCounter);
             
