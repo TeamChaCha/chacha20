@@ -3,10 +3,14 @@
 // Example Nonce 0123456789ABCDEF
 //               (16 chars of hex == 64 bits)
 
+
+////////// ChaCha20 Functions //////////
+var counter = new Uint32Array(2);
+
 function encrypt( )
 {
     // Performs ChaCha20 encryption.
-
+    clearOutput( )
     // 1. getElements()
     const [key, nonce, message] = getElements( )
     // 2. hexToInt()
@@ -15,7 +19,7 @@ function encrypt( )
     postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
     // 3. initState()
     const state = initState(bytesKey, bytesNonce)
-    // 4. Peform encryption (? show changes during encryption)
+    // 4. Peform encryption
     // 5. postElements()
     postResults(message)
 }
@@ -23,7 +27,7 @@ function encrypt( )
 function decrypt( )
 {
     // Peforms ChaCha20 decryption.
-
+    clearOutput( )
     // 1. Retrieve input
     const [key, nonce, message] = getElements( )
     // 2. hexToInt()
@@ -32,12 +36,12 @@ function decrypt( )
     postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
     // 3. initState()
     const state = initState(bytesKey, bytesNonce)
-    // 4. Peform decyrption (? show changes during decryption)
+    // 4. Peform decyrption
     // 5. Post output
     postResults(message)
 }
 
-function hexToInt( hex )
+function hexToInt(hex)
 {
     // Convert hex strings to byte arrays, since each 
     // element in state is a 32-bit word (4 bytes).
@@ -66,64 +70,9 @@ function hexToInt( hex )
     return byteArray;
 }
 
-function getElements( ) 
-{
-    // Retrieves algorithm input.
-    const ids = ["key", "nonce", "message"] 
-    return ids.map(id => document.getElementById(id).value)
-}
-
-function postIntermediate(section, input)
-{
-    // Posts intermediate algorithm output (e.g., round output).
-    // Get HTML class and header.
-    const outputGroup = document.querySelector(".output_group");
-    const intermediateHeader = document.querySelector(".output_group h3");
-    
-    // Create new pre element, for new block
-    // of intermediate output.
-    const newPre = document.createElement("pre");
-    newPre.className = "output";
-
-    let sectionContent = `${section}:`;
-    for (let i = 0; i < input.length; i++) 
-    {
-        sectionContent += `\n${input[i]}`;
-    }
-    newPre.innerText = sectionContent;
-
-    // Insert new <pre> element, in between two headers.
-    intermediateHeader.insertAdjacentElement("afterend", newPre);
-}
-
-
-function postResults(message)
-{
-    // Create new pre element, for new block
-    // of results output.
-    const newPre = document.createElement("pre");
-    newPre.className = "output";
-    newPre.id = "result";
-    const resultsHeader = document.querySelector(".output_group h3:nth-of-type(2)");
-
-    // Posts final algorithm output.
-    newPre.innerText = `Message: \n${message}`;
-    resultsHeader.insertAdjacentElement("afterend", newPre);
-}
-
-function clearOutput( )
-{
-    // Clear HTML output section; remove
-    // all <pre> elements.
-    document.querySelectorAll(".output_group pre").forEach
-    (
-        element => {element.remove( )}
-    );
-}
-
 function initState( key, nonce )
 {
-    // Initializes the state matrix, as shown below:
+    // Initializes the state matrix, as shown below.
     //
     // [ "expa" ][ "nd 3" ][ "2-by" ][ "te K" ]
     // [   Key  ][   Key  ][   Key  ][   Key  ]
@@ -135,14 +84,14 @@ function initState( key, nonce )
     // [   8    ][   9    ][   10   ][   11   ]
     // [   12   ][   13   ][   14   ][   15   ]
 
+    // Spaces here to align formatting with non-monospaced font.
     const matrixVisual =
     `
-    [ "expa" ][ "nd 3" ][ "2-by" ][ "te K" ]
-    [   Key  ][   Key  ][   Key  ][   Key  ]
-    [   Key  ][   Key  ][   Key  ][   Key  ]
-    [ Counter][ Counter][  Nonce ][  Nonce ]
+    [   "expa"  ][    "nd 3"  ][    "2-by"  ][    "te K"  ]
+    [      Key     ][      Key     ][      Key      ][      Key    ]
+    [      Key     ][      Key     ][      Key      ][      Key    ]
+    [ Counter][ Counter][   Nonce  ][   Nonce  ]
     `
-
     postIntermediate("Initializing the State Matrix", [matrixVisual])
 
     // 4x4 matrix of 32-bit words.
@@ -154,19 +103,27 @@ function initState( key, nonce )
     state[1] = 0x6E642033; // "nd 3"
     state[2] = 0x322D6279; // "2-by"
     state[3] = 0x7465206B; // "te k"
+    postIntermediate("Initializing the State Matrix", ["\nAdd Constants (in 32-bit):", state[0], state[1], state[2], state[3]])
 
     // Add the key.
     for (let i = 0; i < 8; i++)
     {
         state[4 + i] = (key[i * 4]) | (key[i * 4 + 1] << 8) | (key[i * 4 + 2] << 16) | (key[i * 4 + 3] << 24);
     }
+    postIntermediate("Initializing the State Matrix", ["\nAdd Key (in 32-bit):", ...state.slice(4, 11)])
 
-    // Add the counter.
-    state[12] = 1;
+    // Add the counter. Starts at 0 during init.,
+    // and increments in successive blocks. 
+    state[12] = 0
+    state[13] = 0
+    postIntermediate("Initializing the State Matrix", ["\nAdd Counter (in 32-bit):", state[12], state[13]])
 
-    // Add the 64-bit nonce into state[14] and state[15]
+    // Add the 64-bit nonce into state[14] and state[15].
     state[14] = (nonce[0]) | (nonce[1] << 8) | (nonce[2] << 16) | (nonce[3] << 24);
     state[15] = (nonce[4]) | (nonce[5] << 8) | (nonce[6] << 16) | (nonce[7] << 24);
+    postIntermediate("Initializing the State Matrix", ["\nAdd Nonce (in 32-bit):", state[14], state[15]])    
+
+    postIntermediate("Initializing the State Matrix", ["\nFinal State Matrix (in 32-bit):", ...state])    
 
     return state
 }
@@ -220,26 +177,71 @@ function rotateLeft(val, shift)
     return rotatedValue >>> 0;
 }
 
-/*
-function initializeState(key, nonce) {
-    const state = new Uint32Array(16);
-    
-    const constants = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]; // "expa", "nd 3", "2-by", "te K"
-    for (let i = 0; i < 4; i++) {
-        state[i] = constants[i];
-    }
-
-    for (let i = 0; i < 8; i++) {
-        state[i + 4] = (key[i * 4] << 24) | (key[i * 4 + 1] << 16) | (key[i * 4 + 2] << 8) | (key[i * 4 + 3]);
-    }
-
-    state[12] = 0; // Counter
-    state[13] = 0; // Counter
-
-    for (let i = 0; i < 2; i++) {
-        state[i + 14] = (nonce[i * 4] << 24) | (nonce[i * 4 + 1] << 16) | (nonce[i * 4 + 2] << 8) | (nonce[i * 4 + 3]);
-    }
-
-    return state;
+////////// HTML Functions //////////
+function getElements( ) 
+{
+    // Retrieves algorithm input.
+    const ids = ["key", "nonce", "message"] 
+    return ids.map(id => document.getElementById(id).value)
 }
-*/
+
+function postIntermediate(section, input)
+{
+    // Posts intermediate algorithm output (e.g., round output).
+    const newPre = document.createElement("pre");
+    newPre.className = "output";
+    const outputGroup = document.querySelector(".output_group");
+
+    let sectionContent = `${section}:`;
+    for (let i = 0; i < input.length; i++) 
+    {
+        sectionContent += `\n${input[i]}`;
+    }
+    newPre.innerText = sectionContent;
+
+    // Insert new <pre> element after last one.
+    const prevPre = outputGroup.querySelector("pre:last-of-type");
+    prevPre.insertAdjacentElement("afterend", newPre);
+}
+
+
+function postResults(message)
+{
+    // Posts final algorithm output.
+    const newPre = document.createElement("pre");
+    newPre.className = "output";
+    newPre.id = "result";
+    const resultsHeader = document.querySelector(".output_group h3:nth-of-type(2)");
+
+    // Insert new <pre> element after final results header.
+    newPre.innerText = `Message: \n${message}`;
+    resultsHeader.insertAdjacentElement("afterend", newPre);
+}
+
+function clearOutput( )
+{
+    // Clears HTML output section; removes
+    // all <pre> elements (except placeholder).
+    document.querySelectorAll(".output_group pre").forEach
+    (
+        element => 
+        {
+            if(!element.classList.contains("placeholder"))
+            {
+                element.remove();
+            }
+        }
+    );
+}
+
+function clearInput( )
+{
+    // Clears HTML input section (textareas).
+    document.querySelectorAll("textarea").forEach
+    (
+        textarea => 
+        {
+            textarea.value = "";
+        }
+    );
+}
