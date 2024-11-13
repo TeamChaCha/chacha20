@@ -21,7 +21,7 @@ function encrypt( )
     const state = initState(bytesKey, bytesNonce)
     // 4. Peform encryption
     // 5. postElements()
-    postResults(message)
+    postResults("Ciphertext:", message)
 }
 
 function decrypt( )
@@ -38,7 +38,7 @@ function decrypt( )
     const state = initState(bytesKey, bytesNonce)
     // 4. Peform decyrption
     // 5. Post output
-    postResults(message)
+    postResults("Plaintext:", message)
 }
 
 function hexToInt(hex)
@@ -205,7 +205,7 @@ function postIntermediate(section, input)
 }
 
 
-function postResults(message)
+function postResults(preface, message)
 {
     // Posts final algorithm output.
     const newPre = document.createElement("pre");
@@ -214,7 +214,7 @@ function postResults(message)
     const resultsHeader = document.querySelector(".output_group h3:nth-of-type(2)");
 
     // Insert new <pre> element after final results header.
-    newPre.innerText = `Message: \n${message}`;
+    newPre.innerText = `${preface}\n${message}`;
     resultsHeader.insertAdjacentElement("afterend", newPre);
 }
 
