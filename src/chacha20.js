@@ -6,23 +6,22 @@
 
 
 ////////// ChaCha20 Functions //////////
+/**
+ * Performs ChaCha20 encryption and handles sub-functions.
+ */
 function encrypt( )
 {
-    // Performs ChaCha20 encryption.
     clearOutput( )
 
-    // 1. getElements( )
+    // Retrieve input and convert to bytes.
     const [key, nonce, message] = getElements( )
-
-    // 2. hexToInt( )
     const bytesKey   = hexToInt(key);
     const bytesNonce = hexToInt(nonce);
     postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
 
-    // 3. initState( )
     const state = initState(bytesKey, bytesNonce)
 
-    // 4. Peform encryption
+    // Perform encryption.
     {
         const bytesMessage = new TextEncoder( ).encode(message);
         let ciphertext = new Uint8Array(bytesMessage.length);
@@ -70,23 +69,23 @@ function encrypt( )
     }
 }
 
+/**
+ * Performs ChaCha20 decryption and handles sub-functions.
+ */
 function decrypt( )
 {
     // Peforms ChaCha20 decryption.
     clearOutput( )
 
-    // 1. Retrieve input
+    // Retrieve input and convert to bytes.
     const [key, nonce, message] = getElements( )
-
-    // 2. hexToInt( )
     const bytesKey   = hexToInt(key);
     const bytesNonce = hexToInt(nonce);
     postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
 
-    // 3. initState( )
     const state = initState(bytesKey, bytesNonce)
 
-    // 4. Peform decyrption
+    // Perform decryption.
     {
         const bytesMessage = new Uint8Array
         (
@@ -98,11 +97,12 @@ function decrypt( )
 
         for (let i = 0; i < bytesMessage.length; i += 64) 
         {
-            // Preserve original state matrix to added back at end,
+            // Preserve original state matrix to add back at end,
             // since workingState gets modified in chacha20Block( ).
             const workingState = new Uint32Array(state);
             workingState[12] = blockCounter & 0xffffffff; // Get lower 32-bits.
-            workingState[13] = (blockCounter >> 32) & 0xffffffff; // Get upper 32-bits.
+            // workingState[13] = (blockCounter >> 32) & 0xffffffff;
+            workingState[13] = blockCounter >> 0; // Get upper 32-bits.
             
             chacha20Block(workingState, blockCounter);
             
@@ -139,6 +139,10 @@ function decrypt( )
     }
 }
 
+/**
+ * Converts hex strings to byte arrays.
+ * @param {hex} hex The hex string to convert.
+ */
 function hexToInt(hex)
 {
     // Convert hex strings to byte arrays, since each 
@@ -171,10 +175,14 @@ function hexToInt(hex)
     return byteArray;
 }
 
+/**
+ * Initializes the ChaCha20 state matrix.
+ * @param {Uint8Array} key The private key, to add to state.
+ * @param {Uint8Array} nonce The random nonce, to add to state.
+ * @returns {Uint32Array} The ChaCha20 state matrix.
+ */
 function initState(key, nonce)
 {
-    // Initializes the state matrix, as shown below.
-    //
     // [ "expa" ][ "nd 3" ][ "2-by" ][ "te K" ]
     // [   Key  ][   Key  ][   Key  ][   Key  ]
     // [   Key  ][   Key  ][   Key  ][   Key  ]
@@ -242,6 +250,11 @@ function initState(key, nonce)
     return state
 }
 
+/**
+ * Performs 20 rounds of ChaCha20.
+ * @param {Uint8Array} state The ChaCha20 state matrix.
+ * @param {Uint8Array} count The current block.
+ */
 function chacha20Block(state, count)
 {
     postIntermediate(`ChaCha20 Block ${count + 1}`, ["\nBefore:", ...state])
@@ -262,6 +275,14 @@ function chacha20Block(state, count)
     postIntermediate(`ChaCha20 Block ${count + 1}`, ["\nAfter:", ...state])
 }
 
+/**
+ * Performs a quarter round of ChaCha20.
+ * @param {Uint8Array} state The ChaCha20 state matrix.
+ * @param {Uint8Array} a An element of state.
+ * @param {Uint8Array} b An element of state.
+ * @param {Uint8Array} c An element of state.
+ * @param {Uint8Array} d An element of state.
+ */
 function quarterRound(state, a, b, c, d)
 {
     // The quarter round takes 4 32-bit words
@@ -283,6 +304,11 @@ function quarterRound(state, a, b, c, d)
     state[b] = rotateLeft(state[b],  7);
 }
 
+/**
+ * Performs bitwise rotation.
+ * @param {Uint8Array} val The value to shift.
+ * @param {Uint8Array} shift The amount to shift by.
+ */
 function rotateLeft(val, shift)
 {
     // Rotate left performs a left (circular) rotation
@@ -294,16 +320,25 @@ function rotateLeft(val, shift)
 }
 
 ////////// HTML Functions //////////
+/**
+ * Retrieves HTML algorithm input
+ * @returns {string} The private key.
+ * @returns {string} The random nonce.
+ * @returns {string} The message.
+ */
 function getElements( ) 
 {
-    // Retrieves algorithm input.
     const ids = ["key", "nonce", "message"] 
     return ids.map(id => document.getElementById(id).value)
 }
 
+/**
+ * Posts intermediate algorithm ouptut.
+ * @param {string} section The output heading.
+ * @param {list} input The output to print.
+ */
 function postIntermediate(section, input)
 {
-    // Posts intermediate algorithm output (e.g., round output).
     const newPre = document.createElement("pre");
     newPre.className = "output";
     const outputGroup = document.querySelector(".output_group");
@@ -320,10 +355,13 @@ function postIntermediate(section, input)
     prevPre.insertAdjacentElement("afterend", newPre);
 }
 
-
+/**
+ * Posts final algorithm ouptut.
+ * @param {string} preface The output preface.
+ * @param {string} message The output to print.
+ */
 function postResults(preface, message)
 {
-    // Posts final algorithm output.
     const newPre = document.createElement("pre");
     newPre.className = "output";
     newPre.id = "result";
@@ -334,10 +372,11 @@ function postResults(preface, message)
     resultsHeader.insertAdjacentElement("afterend", newPre);
 }
 
+/**
+ * Clears all HTML output.
+ */
 function clearOutput( )
 {
-    // Clears HTML output section; removes
-    // all <pre> elements (except placeholder).
     document.querySelectorAll(".output_group pre").forEach
     (
         element => 
@@ -350,9 +389,11 @@ function clearOutput( )
     );
 }
 
+/**
+ * Clears all HTML input.
+ */
 function clearInput( )
 {
-    // Clears HTML input section (textareas).
     document.querySelectorAll("textarea").forEach
     (
         textarea => 
