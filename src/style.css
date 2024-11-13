@@ -133,6 +133,13 @@ button:hover
     text-align: left;
 }
 
+.output_group h1,
+.output_group h2,
+.output_group h3
+{
+    margin: 20px 0;
+}
+
 .placeholder
 {
     display: none;
