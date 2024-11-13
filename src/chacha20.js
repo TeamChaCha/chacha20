@@ -1,3 +1,4 @@
+// Using little-endian order.
 // Example Key 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
 //             (64 chars of hex == 256 bits)
 // Example Nonce 0123456789ABCDEF
@@ -50,8 +51,11 @@ function hexToInt(hex)
     // 64-bit nonce = 8 bytes = 16 hex chars.
     // 1 hex value = 4 bits; 2 hex values = 1 byte.
 
-    // e.g., given a 256-bit key (64 hex chars), this 
-    // creates a Uint8Array of size 32 (64 / 2).
+    // Given a 256-bit key (64 hex chars), this 
+    // creates a Uint8Array of size 32 (64 / 2),
+    // e.g.,
+    //      with 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF,
+    //      
     const byteArray = new Uint8Array(hex.length / 2); 
     // Loop through the hex string, converting each pair
     // of characters to a byte.
@@ -94,23 +98,36 @@ function initState( key, nonce )
     `
     postIntermediate("Initializing the State Matrix", [matrixVisual])
 
-    // 4x4 matrix of 32-bit words.
+    // 4x4 matrix of 16 32-bit words.
     const state = new Uint32Array(16) 
 
     // Add the nothing-up-my-sleeve constants,
-    // "expand 32-byte K".
+    // "expand 32-byte K". These are the same
+    // across all implementations of the program.
+    // Little-endian order, lsb stored in lowest mem. address.
     state[0] = 0x65787061; // "expa"
     state[1] = 0x6E642033; // "nd 3"
     state[2] = 0x322D6279; // "2-by"
     state[3] = 0x7465206B; // "te k"
     postIntermediate("Initializing the State Matrix", ["\nAdd Constants (in 32-bit):", state[0], state[1], state[2], state[3]])
 
-    // Add the key.
+    // Add the key. The left shifts and bitwise ORs ensure that the final result
+    // e.g.,
+    //      with 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF converted into
+    //      1, 35, 69, 103, 137, 171, 205, 239, 1, 35, 69, 103, 137, 171, 205, 239, 1, 35, 69, 103,
+    //      137, 171, 205, 239, 1, 35, 69, 103, 137, 171, 205, 239
+    //
+    //      the first group of 4 bytes (key[0] to key[3]) -> state[4]
+    //      state[4] = (key[0]) | (key[1] << 8) | (key[2] << 16) | (key[3] << 24);
+    //      state[4] = 0000 0001| 0010 0011 << 8| 0100 0101 << 16| 0100 0101 << 24
+    //               = 0000 0001| 0010 0011 0000 0000 | 0100 0101 0000 0000 0000 0000 | etc.
+    //               = 0110 0111 0100 0101 0010 0011 0000 0001 = 1732584193 = 0x67452301 
+    //                 (which is first 4 bytes of 01234567...) in little-endian order.
     for (let i = 0; i < 8; i++)
     {
         state[4 + i] = (key[i * 4]) | (key[i * 4 + 1] << 8) | (key[i * 4 + 2] << 16) | (key[i * 4 + 3] << 24);
     }
-    postIntermediate("Initializing the State Matrix", ["\nAdd Key (in 32-bit):", ...state.slice(4, 11)])
+    postIntermediate("Initializing the State Matrix", ["\nAdd Key (in 32-bit):", ...state.slice(4, 12)])
 
     // Add the counter. Starts at 0 during init.,
     // and increments in successive blocks. 
