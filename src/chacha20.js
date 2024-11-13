@@ -6,40 +6,137 @@
 
 
 ////////// ChaCha20 Functions //////////
-var counter = new Uint32Array(2);
-
 function encrypt( )
 {
     // Performs ChaCha20 encryption.
     clearOutput( )
-    // 1. getElements()
+
+    // 1. getElements( )
     const [key, nonce, message] = getElements( )
-    // 2. hexToInt()
+
+    // 2. hexToInt( )
     const bytesKey   = hexToInt(key);
     const bytesNonce = hexToInt(nonce);
     postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
-    // 3. initState()
+
+    // 3. initState( )
     const state = initState(bytesKey, bytesNonce)
+
     // 4. Peform encryption
-    // 5. postElements()
-    postResults("Ciphertext:", message)
+    {
+        const bytesMessage = new TextEncoder( ).encode(message);
+        let ciphertext = new Uint8Array(bytesMessage.length);
+        let blockCounter = 0;
+
+        for (let i = 0; i < bytesMessage.length; i += 64) 
+        {
+            // Preserve original state matrix to added back at end,
+            // since workingState gets modified in chacha20Block( ).
+            const workingState = new Uint32Array(state);
+            workingState[12] = blockCounter & 0xffffffff; // Get lower 32-bits.
+            workingState[13] = (blockCounter >> 32) & 0xffffffff; // Get upper 32-bits.
+            
+            chacha20Block(workingState, blockCounter);
+            
+            // Add the original state back to the result.
+            for (let j = 0; j < 16; j++) 
+            {
+                workingState[j] += state[j];
+            }
+
+            // Convert the state to bytes for keystream.
+            const keyStream = new Uint8Array(64);
+            for (let j = 0; j < 16; j++) 
+            {
+                const word = workingState[j];
+                keyStream[j * 4] = word & 0xff;
+                keyStream[j * 4 + 1] = (word >> 8) & 0xff;
+                keyStream[j * 4 + 2] = (word >> 16) & 0xff;
+                keyStream[j * 4 + 3] = (word >> 24) & 0xff;
+            }
+            
+            // XOR keystream with message (plaintext).
+            const blockSize = Math.min(64, bytesMessage.length - i);
+            for (let j = 0; j < blockSize; j++) 
+            {
+                ciphertext[i + j] = bytesMessage[i + j] ^ keyStream[j];
+            }
+            
+            blockCounter++;
+        }
+
+        ciphertext = btoa(String.fromCharCode.apply(null, ciphertext));
+        postResults("Ciphertext:", ciphertext)
+    }
 }
 
 function decrypt( )
 {
     // Peforms ChaCha20 decryption.
     clearOutput( )
+
     // 1. Retrieve input
     const [key, nonce, message] = getElements( )
-    // 2. hexToInt()
+
+    // 2. hexToInt( )
     const bytesKey   = hexToInt(key);
     const bytesNonce = hexToInt(nonce);
     postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
-    // 3. initState()
+
+    // 3. initState( )
     const state = initState(bytesKey, bytesNonce)
+
     // 4. Peform decyrption
-    // 5. Post output
-    postResults("Plaintext:", message)
+    {
+        const bytesMessage = new Uint8Array
+        (
+            atob(message).split("").map(char => char.charCodeAt(0))
+        );
+
+        let plaintext = new Uint8Array(bytesMessage.length);
+        let blockCounter = 0;
+
+        for (let i = 0; i < bytesMessage.length; i += 64) 
+        {
+            // Preserve original state matrix to added back at end,
+            // since workingState gets modified in chacha20Block( ).
+            const workingState = new Uint32Array(state);
+            workingState[12] = blockCounter & 0xffffffff; // Get lower 32-bits.
+            workingState[13] = (blockCounter >> 32) & 0xffffffff; // Get upper 32-bits.
+            
+            chacha20Block(workingState, blockCounter);
+            
+            // Add the original state back to the result.
+            for (let j = 0; j < 16; j++) 
+            {
+                workingState[j] += state[j];
+            }
+
+            // Convert the state to bytes for keystream.
+            const keyStream = new Uint8Array(64);
+            for (let j = 0; j < 16; j++) 
+            {
+                const word = workingState[j];
+                keyStream[j * 4] = word & 0xff;
+                keyStream[j * 4 + 1] = (word >> 8) & 0xff;
+                keyStream[j * 4 + 2] = (word >> 16) & 0xff;
+                keyStream[j * 4 + 3] = (word >> 24) & 0xff;
+            }
+            
+            // XOR keystream with message (ciphertext).
+            const blockSize = Math.min(64, bytesMessage.length - i);
+            for (let j = 0; j < blockSize; j++) 
+            {
+                plaintext[i + j] = bytesMessage[i + j] ^ keyStream[j];
+            }
+            
+            blockCounter++;
+        }
+
+
+    plaintext = new TextDecoder().decode(plaintext);
+    postResults("Plaintext:", plaintext)
+    }
 }
 
 function hexToInt(hex)
@@ -74,7 +171,7 @@ function hexToInt(hex)
     return byteArray;
 }
 
-function initState( key, nonce )
+function initState(key, nonce)
 {
     // Initializes the state matrix, as shown below.
     //
@@ -130,7 +227,7 @@ function initState( key, nonce )
     postIntermediate("Initializing the State Matrix", ["\nAdd Key (in 32-bit):", ...state.slice(4, 12)])
 
     // Add the counter. Starts at 0 during init.,
-    // and increments in successive blocks. 
+    // and increments in successive blocks.
     state[12] = 0
     state[13] = 0
     postIntermediate("Initializing the State Matrix", ["\nAdd Counter (in 32-bit):", state[12], state[13]])
@@ -145,8 +242,9 @@ function initState( key, nonce )
     return state
 }
 
-function chacha20Block( )
+function chacha20Block(state, count)
 {
+    postIntermediate(`ChaCha20 Block ${count + 1}`, ["\nBefore:", ...state])
     // 20 rounds with 2 rounds per loop = 10 loops.
     for(let i = 0; i < 20; i += 2)
     {
@@ -161,6 +259,7 @@ function chacha20Block( )
         quarterRound(state, 2, 7, 8,  13) // Diagonal 3
         quarterRound(state, 3, 4, 9,  14) // Diagonal 4
     }
+    postIntermediate(`ChaCha20 Block ${count + 1}`, ["\nAfter:", ...state])
 }
 
 function quarterRound(state, a, b, c, d)
@@ -245,7 +344,7 @@ function clearOutput( )
         {
             if(!element.classList.contains("placeholder"))
             {
-                element.remove();
+                element.remove( );
             }
         }
     );
