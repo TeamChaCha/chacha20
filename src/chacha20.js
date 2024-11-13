@@ -1,3 +1,4 @@
+// Using little-endian order.
 // Example Key 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
 //             (64 chars of hex == 256 bits)
 // Example Nonce 0123456789ABCDEF
@@ -5,40 +6,137 @@
 
 
 ////////// ChaCha20 Functions //////////
-var counter = new Uint32Array(2);
-
 function encrypt( )
 {
     // Performs ChaCha20 encryption.
     clearOutput( )
-    // 1. getElements()
+
+    // 1. getElements( )
     const [key, nonce, message] = getElements( )
-    // 2. hexToInt()
+
+    // 2. hexToInt( )
     const bytesKey   = hexToInt(key);
     const bytesNonce = hexToInt(nonce);
     postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
-    // 3. initState()
+
+    // 3. initState( )
     const state = initState(bytesKey, bytesNonce)
+
     // 4. Peform encryption
-    // 5. postElements()
-    postResults(message)
+    {
+        const bytesMessage = new TextEncoder( ).encode(message);
+        let ciphertext = new Uint8Array(bytesMessage.length);
+        let blockCounter = 0;
+
+        for (let i = 0; i < bytesMessage.length; i += 64) 
+        {
+            // Preserve original state matrix to added back at end,
+            // since workingState gets modified in chacha20Block( ).
+            const workingState = new Uint32Array(state);
+            workingState[12] = blockCounter & 0xffffffff; // Get lower 32-bits.
+            workingState[13] = (blockCounter >> 32) & 0xffffffff; // Get upper 32-bits.
+            
+            chacha20Block(workingState, blockCounter);
+            
+            // Add the original state back to the result.
+            for (let j = 0; j < 16; j++) 
+            {
+                workingState[j] += state[j];
+            }
+
+            // Convert the state to bytes for keystream.
+            const keyStream = new Uint8Array(64);
+            for (let j = 0; j < 16; j++) 
+            {
+                const word = workingState[j];
+                keyStream[j * 4] = word & 0xff;
+                keyStream[j * 4 + 1] = (word >> 8) & 0xff;
+                keyStream[j * 4 + 2] = (word >> 16) & 0xff;
+                keyStream[j * 4 + 3] = (word >> 24) & 0xff;
+            }
+            
+            // XOR keystream with message (plaintext).
+            const blockSize = Math.min(64, bytesMessage.length - i);
+            for (let j = 0; j < blockSize; j++) 
+            {
+                ciphertext[i + j] = bytesMessage[i + j] ^ keyStream[j];
+            }
+            
+            blockCounter++;
+        }
+
+        ciphertext = btoa(String.fromCharCode.apply(null, ciphertext));
+        postResults("Ciphertext:", ciphertext)
+    }
 }
 
 function decrypt( )
 {
     // Peforms ChaCha20 decryption.
     clearOutput( )
+
     // 1. Retrieve input
     const [key, nonce, message] = getElements( )
-    // 2. hexToInt()
+
+    // 2. hexToInt( )
     const bytesKey   = hexToInt(key);
     const bytesNonce = hexToInt(nonce);
     postIntermediate("Hex to Int Conversion", ["\nKey:", bytesKey, "\nNonce:", bytesNonce])
-    // 3. initState()
+
+    // 3. initState( )
     const state = initState(bytesKey, bytesNonce)
+
     // 4. Peform decyrption
-    // 5. Post output
-    postResults(message)
+    {
+        const bytesMessage = new Uint8Array
+        (
+            atob(message).split("").map(char => char.charCodeAt(0))
+        );
+
+        let plaintext = new Uint8Array(bytesMessage.length);
+        let blockCounter = 0;
+
+        for (let i = 0; i < bytesMessage.length; i += 64) 
+        {
+            // Preserve original state matrix to added back at end,
+            // since workingState gets modified in chacha20Block( ).
+            const workingState = new Uint32Array(state);
+            workingState[12] = blockCounter & 0xffffffff; // Get lower 32-bits.
+            workingState[13] = (blockCounter >> 32) & 0xffffffff; // Get upper 32-bits.
+            
+            chacha20Block(workingState, blockCounter);
+            
+            // Add the original state back to the result.
+            for (let j = 0; j < 16; j++) 
+            {
+                workingState[j] += state[j];
+            }
+
+            // Convert the state to bytes for keystream.
+            const keyStream = new Uint8Array(64);
+            for (let j = 0; j < 16; j++) 
+            {
+                const word = workingState[j];
+                keyStream[j * 4] = word & 0xff;
+                keyStream[j * 4 + 1] = (word >> 8) & 0xff;
+                keyStream[j * 4 + 2] = (word >> 16) & 0xff;
+                keyStream[j * 4 + 3] = (word >> 24) & 0xff;
+            }
+            
+            // XOR keystream with message (ciphertext).
+            const blockSize = Math.min(64, bytesMessage.length - i);
+            for (let j = 0; j < blockSize; j++) 
+            {
+                plaintext[i + j] = bytesMessage[i + j] ^ keyStream[j];
+            }
+            
+            blockCounter++;
+        }
+
+
+    plaintext = new TextDecoder().decode(plaintext);
+    postResults("Plaintext:", plaintext)
+    }
 }
 
 function hexToInt(hex)
@@ -50,8 +148,11 @@ function hexToInt(hex)
     // 64-bit nonce = 8 bytes = 16 hex chars.
     // 1 hex value = 4 bits; 2 hex values = 1 byte.
 
-    // e.g., given a 256-bit key (64 hex chars), this 
-    // creates a Uint8Array of size 32 (64 / 2).
+    // Given a 256-bit key (64 hex chars), this 
+    // creates a Uint8Array of size 32 (64 / 2),
+    // e.g.,
+    //      with 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF,
+    //      
     const byteArray = new Uint8Array(hex.length / 2); 
     // Loop through the hex string, converting each pair
     // of characters to a byte.
@@ -70,7 +171,7 @@ function hexToInt(hex)
     return byteArray;
 }
 
-function initState( key, nonce )
+function initState(key, nonce)
 {
     // Initializes the state matrix, as shown below.
     //
@@ -94,26 +195,39 @@ function initState( key, nonce )
     `
     postIntermediate("Initializing the State Matrix", [matrixVisual])
 
-    // 4x4 matrix of 32-bit words.
+    // 4x4 matrix of 16 32-bit words.
     const state = new Uint32Array(16) 
 
     // Add the nothing-up-my-sleeve constants,
-    // "expand 32-byte K".
+    // "expand 32-byte K". These are the same
+    // across all implementations of the program.
+    // Little-endian order, lsb stored in lowest mem. address.
     state[0] = 0x65787061; // "expa"
     state[1] = 0x6E642033; // "nd 3"
     state[2] = 0x322D6279; // "2-by"
     state[3] = 0x7465206B; // "te k"
     postIntermediate("Initializing the State Matrix", ["\nAdd Constants (in 32-bit):", state[0], state[1], state[2], state[3]])
 
-    // Add the key.
+    // Add the key. The left shifts and bitwise ORs ensure that the final result
+    // e.g.,
+    //      with 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF converted into
+    //      1, 35, 69, 103, 137, 171, 205, 239, 1, 35, 69, 103, 137, 171, 205, 239, 1, 35, 69, 103,
+    //      137, 171, 205, 239, 1, 35, 69, 103, 137, 171, 205, 239
+    //
+    //      the first group of 4 bytes (key[0] to key[3]) -> state[4]
+    //      state[4] = (key[0]) | (key[1] << 8) | (key[2] << 16) | (key[3] << 24);
+    //      state[4] = 0000 0001| 0010 0011 << 8| 0100 0101 << 16| 0100 0101 << 24
+    //               = 0000 0001| 0010 0011 0000 0000 | 0100 0101 0000 0000 0000 0000 | etc.
+    //               = 0110 0111 0100 0101 0010 0011 0000 0001 = 1732584193 = 0x67452301 
+    //                 (which is first 4 bytes of 01234567...) in little-endian order.
     for (let i = 0; i < 8; i++)
     {
         state[4 + i] = (key[i * 4]) | (key[i * 4 + 1] << 8) | (key[i * 4 + 2] << 16) | (key[i * 4 + 3] << 24);
     }
-    postIntermediate("Initializing the State Matrix", ["\nAdd Key (in 32-bit):", ...state.slice(4, 11)])
+    postIntermediate("Initializing the State Matrix", ["\nAdd Key (in 32-bit):", ...state.slice(4, 12)])
 
     // Add the counter. Starts at 0 during init.,
-    // and increments in successive blocks. 
+    // and increments in successive blocks.
     state[12] = 0
     state[13] = 0
     postIntermediate("Initializing the State Matrix", ["\nAdd Counter (in 32-bit):", state[12], state[13]])
@@ -128,8 +242,9 @@ function initState( key, nonce )
     return state
 }
 
-function chacha20Block( )
+function chacha20Block(state, count)
 {
+    postIntermediate(`ChaCha20 Block ${count + 1}`, ["\nBefore:", ...state])
     // 20 rounds with 2 rounds per loop = 10 loops.
     for(let i = 0; i < 20; i += 2)
     {
@@ -144,6 +259,7 @@ function chacha20Block( )
         quarterRound(state, 2, 7, 8,  13) // Diagonal 3
         quarterRound(state, 3, 4, 9,  14) // Diagonal 4
     }
+    postIntermediate(`ChaCha20 Block ${count + 1}`, ["\nAfter:", ...state])
 }
 
 function quarterRound(state, a, b, c, d)
@@ -205,7 +321,7 @@ function postIntermediate(section, input)
 }
 
 
-function postResults(message)
+function postResults(preface, message)
 {
     // Posts final algorithm output.
     const newPre = document.createElement("pre");
@@ -214,7 +330,7 @@ function postResults(message)
     const resultsHeader = document.querySelector(".output_group h3:nth-of-type(2)");
 
     // Insert new <pre> element after final results header.
-    newPre.innerText = `Message: \n${message}`;
+    newPre.innerText = `${preface}\n${message}`;
     resultsHeader.insertAdjacentElement("afterend", newPre);
 }
 
@@ -228,7 +344,7 @@ function clearOutput( )
         {
             if(!element.classList.contains("placeholder"))
             {
-                element.remove();
+                element.remove( );
             }
         }
     );
