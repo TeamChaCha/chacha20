@@ -16,7 +16,7 @@ adds, xors, and bit rotates to ensure optimal confusion. <br>
 _This program was created for UTA's CSE 4381-001._
 
 ## Usages
-- The live demonstration can be found [here](https://teamchacha.github.io/my-chacha20-site/src/index.html).
+- The live demonstration can be found [here](https://teamchacha.github.io/chacha20/src/index.html).
 
 ## References
 - [ChaCha20 Documentation](https://cr.yp.to/chacha/chacha-20080120.pdf)
