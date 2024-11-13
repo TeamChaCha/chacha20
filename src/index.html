@@ -36,10 +36,12 @@
         </div>
         <button onclick="encrypt()">Encrypt</button>
         <button onclick="decrypt()">Decrypt</button>
-        <button onclick="clearOutput()">Clear Output</button>
+        <button onclick="clearOutput()" class="removal">Clear Output</button>
+        <button onclick="clearInput()" class="removal">Clear Input</button>
         <div class="output_group">
             <h2>Output</h2>
             <h3>Intermediate Results</h3>
+            <pre class="output, placeholder"></pre>
             <h3>Final Results</h3>
         </div>
     </div>

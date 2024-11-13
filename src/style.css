@@ -64,18 +64,18 @@ label
     font-size: 14px;
 }
 
-
 .subtitle
 {
     font-size: 12px;
     margin-bottom: 5px;
+    color: #333;
 }
 
 textarea 
 {
     width: 100%;
     padding: 8px;
-    font-size: 14px;
+    font-size: 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     resize: vertical;
@@ -99,6 +99,16 @@ button:hover
     background-color: #016A36;
 }
 
+.removal
+{
+    background-color: #d73d5f; 
+}
+
+.removal:hover
+{
+    background-color: #b53450;
+}
+
 .output
 {
     background-color: #dddddd;
@@ -108,10 +118,11 @@ button:hover
     overflow-x: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1.5;
     max-height: 200px;
     overflow-y: auto;
+    margin: 0;
 }
 
 .output_group
@@ -120,7 +131,18 @@ button:hover
     border-radius: 4px;
     padding: 15px;
     text-align: left;
-    white-space: pre-wrap;
+}
+
+.output_group h1,
+.output_group h2,
+.output_group h3
+{
+    margin: 20px 0;
+}
+
+.placeholder
+{
+    display: none;
 }
 
 #result
