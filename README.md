@@ -1,5 +1,4 @@
 # CHA CHA 20
-CSE 4381-001 Information Sec. II <br>
 Demonstration of the ChaCha20 cryptographic algorithm.
 
 ## About
@@ -13,7 +12,8 @@ The ChaCha20 algorithm, a variant of Salsa20, constructs the following state, ma
 </pre>
 This state then undergoes 20 rounds (odd and even) of column mixing, <br>
 adds, xors, and bit rotates to ensure optimal confusion. <br>
-_This program was created for UTA's CSE 4381-001._
+> [!NOTE]
+> This program was created for UTA's CSE 4381-001.
 
 ## Usages
 - The live demonstration can be found [here](https://teamchacha.github.io/chacha20/src/index.html).
