@@ -38,6 +38,9 @@ function encrypt( )
             chacha20Block(workingState, blockCounter);
             
             // Add the original state back to the result.
+            // This ensures that the final state matrix will
+            // be a summation of all the workState matrices
+            // created throughout the program run.
             for (let j = 0; j < 16; j++) 
             {
                 workingState[j] += state[j];
@@ -107,6 +110,9 @@ function decrypt( )
             chacha20Block(workingState, blockCounter);
             
             // Add the original state back to the result.
+            // This ensures that the final state matrix will
+            // be a summation of all the workState matrices
+            // created throughout the program run.
             for (let j = 0; j < 16; j++) 
             {
                 workingState[j] += state[j];
@@ -141,7 +147,7 @@ function decrypt( )
 
 /**
  * Converts hex strings to byte arrays.
- * @param {hex} hex The hex string to convert.
+ * @param {string} hex The hex string to convert.
  */
 function hexToInt(hex)
 {
