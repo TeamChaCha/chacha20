@@ -38,6 +38,9 @@ function encrypt( )
             chacha20Block(workingState, blockCounter);
             
             // Add the original state back to the result.
+            // This ensures that the final state matrix will
+            // be a summation of all the workState matrices
+            // created throughout the program run.
             for (let j = 0; j < 16; j++) 
             {
                 workingState[j] += state[j];
@@ -55,6 +58,9 @@ function encrypt( )
             }
             
             // XOR keystream with message (plaintext).
+            // 64, the max. size of a block.
+            // bytesMessage.lenth - i, the remaining bytes left in the message,
+            // from the current position.
             const blockSize = Math.min(64, bytesMessage.length - i);
             for (let j = 0; j < blockSize; j++) 
             {
@@ -107,6 +113,9 @@ function decrypt( )
             chacha20Block(workingState, blockCounter);
             
             // Add the original state back to the result.
+            // This ensures that the final state matrix will
+            // be a summation of all the workState matrices
+            // created throughout the program run.
             for (let j = 0; j < 16; j++) 
             {
                 workingState[j] += state[j];
@@ -141,7 +150,7 @@ function decrypt( )
 
 /**
  * Converts hex strings to byte arrays.
- * @param {hex} hex The hex string to convert.
+ * @param {string} hex The hex string to convert.
  */
 function hexToInt(hex)
 {
@@ -153,10 +162,7 @@ function hexToInt(hex)
     // 1 hex value = 4 bits; 2 hex values = 1 byte.
 
     // Given a 256-bit key (64 hex chars), this 
-    // creates a Uint8Array of size 32 (64 / 2),
-    // e.g.,
-    //      with 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF,
-    //      
+    // creates a Uint8Array of size 32 (64 / 2).
     const byteArray = new Uint8Array(hex.length / 2); 
     // Loop through the hex string, converting each pair
     // of characters to a byte.
@@ -183,16 +189,6 @@ function hexToInt(hex)
  */
 function initState(key, nonce)
 {
-    // [ "expa" ][ "nd 3" ][ "2-by" ][ "te K" ]
-    // [   Key  ][   Key  ][   Key  ][   Key  ]
-    // [   Key  ][   Key  ][   Key  ][   Key  ]
-    // [ Counter][ Counter][  Nonce ][  Nonce ]
-    // 
-    // [   0    ][   1    ][   2    ][   3    ]
-    // [   4    ][   5    ][   6    ][   7    ]
-    // [   8    ][   9    ][   10   ][   11   ]
-    // [   12   ][   13   ][   14   ][   15   ]
-
     // Spaces here to align formatting with non-monospaced font.
     const matrixVisual =
     `
@@ -207,27 +203,14 @@ function initState(key, nonce)
     const state = new Uint32Array(16) 
 
     // Add the nothing-up-my-sleeve constants,
-    // "expand 32-byte K". These are the same
-    // across all implementations of the program.
-    // Little-endian order, lsb stored in lowest mem. address.
+    // "expand 32-byte K" in little-endian order.
     state[0] = 0x65787061; // "expa"
     state[1] = 0x6E642033; // "nd 3"
     state[2] = 0x322D6279; // "2-by"
     state[3] = 0x7465206B; // "te k"
     postIntermediate("Initializing the State Matrix", ["\nAdd Constants (in 32-bit):", state[0], state[1], state[2], state[3]])
 
-    // Add the key. The left shifts and bitwise ORs ensure that the final result
-    // e.g.,
-    //      with 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF converted into
-    //      1, 35, 69, 103, 137, 171, 205, 239, 1, 35, 69, 103, 137, 171, 205, 239, 1, 35, 69, 103,
-    //      137, 171, 205, 239, 1, 35, 69, 103, 137, 171, 205, 239
-    //
-    //      the first group of 4 bytes (key[0] to key[3]) -> state[4]
-    //      state[4] = (key[0]) | (key[1] << 8) | (key[2] << 16) | (key[3] << 24);
-    //      state[4] = 0000 0001| 0010 0011 << 8| 0100 0101 << 16| 0100 0101 << 24
-    //               = 0000 0001| 0010 0011 0000 0000 | 0100 0101 0000 0000 0000 0000 | etc.
-    //               = 0110 0111 0100 0101 0010 0011 0000 0001 = 1732584193 = 0x67452301 
-    //                 (which is first 4 bytes of 01234567...) in little-endian order.
+    // Add the key.
     for (let i = 0; i < 8; i++)
     {
         state[4 + i] = (key[i * 4]) | (key[i * 4 + 1] << 8) | (key[i * 4 + 2] << 16) | (key[i * 4 + 3] << 24);
@@ -252,7 +235,7 @@ function initState(key, nonce)
 
 /**
  * Performs 20 rounds of ChaCha20.
- * @param {Uint8Array} state The ChaCha20 state matrix.
+ * @param {Uint32Array} state The ChaCha20 state matrix.
  * @param {Uint8Array} count The current block.
  */
 function chacha20Block(state, count)
@@ -277,19 +260,14 @@ function chacha20Block(state, count)
 
 /**
  * Performs a quarter round of ChaCha20.
- * @param {Uint8Array} state The ChaCha20 state matrix.
- * @param {Uint8Array} a An element of state.
- * @param {Uint8Array} b An element of state.
- * @param {Uint8Array} c An element of state.
- * @param {Uint8Array} d An element of state.
+ * @param {Uint32Array} state The ChaCha20 state matrix.
+ * @param {int} a An index of state.
+ * @param {int} b An index of state.
+ * @param {int} c An index of state.
+ * @param {int} d An index of state.
  */
 function quarterRound(state, a, b, c, d)
 {
-    // The quarter round takes 4 32-bit words
-    // (a, b, c, d) and state, the current state
-    // matrix of the algorithm. It tries to diffuse as much
-    // as possible, via adds, bitwise XORs, and left shifts.
-    // 16, 12, 8, and 7 are predefined shifts.
     state[a] += state[b]; 
     state[b] ^= state[a]; 
     state[d] = rotateLeft(state[d], 16);
@@ -311,8 +289,6 @@ function quarterRound(state, a, b, c, d)
  */
 function rotateLeft(val, shift)
 {
-    // Rotate left performs a left (circular) rotation
-    // on a 32-bit word (val) by some number of bits (shift).
     let leftShifted = val << shift;
     let rightShifted = val >>> (32 - shift);
     let rotatedValue = leftShifted | rightShifted;
@@ -402,3 +378,27 @@ function clearInput( )
         }
     );
 }
+
+////////// initState() Leftovers //////////
+// [ "expa" ][ "nd 3" ][ "2-by" ][ "te K" ]
+// [   Key  ][   Key  ][   Key  ][   Key  ]
+// [   Key  ][   Key  ][   Key  ][   Key  ]
+// [ Counter][ Counter][  Nonce ][  Nonce ]
+// 
+// [   0    ][   1    ][   2    ][   3    ]
+// [   4    ][   5    ][   6    ][   7    ]
+// [   8    ][   9    ][   10   ][   11   ]
+// [   12   ][   13   ][   14   ][   15   ]
+
+// Add the key. The left shifts and bitwise ORs ensure the final result.
+// e.g.,
+//      with 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF converted into
+//      1, 35, 69, 103, 137, 171, 205, 239, 1, 35, 69, 103, 137, 171, 205, 239, 1, 35, 69, 103,
+//      137, 171, 205, 239, 1, 35, 69, 103, 137, 171, 205, 239
+//
+//      the first group of 4 bytes (key[0] to key[3]) -> state[4]
+//      state[4] = (key[0]) | (key[1] << 8) | (key[2] << 16) | (key[3] << 24);
+//      state[4] = 0000 0001| 0010 0011 << 8| 0100 0101 << 16| 0100 0101 << 24
+//               = 0000 0001| 0010 0011 0000 0000 | 0100 0101 0000 0000 0000 0000 | etc.
+//               = 0110 0111 0100 0101 0010 0011 0000 0001 = 1732584193 = 0x67452301 
+//                 (which is first 4 bytes of 01234567...) in little-endian order.
